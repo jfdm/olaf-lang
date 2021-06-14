@@ -1,0 +1,6 @@
+package olaf
+
+modules = Olaf.Core
+        , Olaf.Interpreter
+
+        , Olaf

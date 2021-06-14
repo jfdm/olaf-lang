@@ -1,0 +1,26 @@
+build/
+*.ibc
+a.output
+# For convenience
+custom.mk
+\#*
+.\#*
+tags
+TAGS
+
+tests/**/output
+
+# IDE and editors
+*.swp
+*~
+.DS_Store
+.hpc
+*.orig
+*.tix
+*.dSYM
+.projectile
+.dir-locals.el
+.vscode
+.idea
+
+docs/build/

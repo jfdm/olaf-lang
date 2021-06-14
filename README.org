@@ -1,0 +1,55 @@
+#+TITLE: Olaf
+
+I am interested in teaching programming language design, implementation, and theory.
+As part of this endeavour I try to get student projects to help think about interactive environments.
+I have let my students explore their own set of extensions to the STLC, however, I have decided to codify my own set of extensions and present a verified reference implementation, and well-typed interpreter for students to gain a feel for the language.
+
+This is Olaf.
+
+* Design
+
+  Olaf is the Simply-Typed Lambda Calculus:
+
+  + functions
+  + variables
+  + function application
+
+  with the following base types:
+
+  + Natural numbers
+  + Booleans
+  + Strings
+  + Characters
+
+  The following builtin operations on these base types:
+
+  + On Strings:
+    + String length
+    + Packing and unpacking strings to list
+
+  + on characters:
+    + to their ordinal value
+    + the char represented by a given nat
+
+  + on natural numbers
+    + less than
+    + addition
+    + subtraction
+
+  + on booleans
+    + conjunction
+    + disjunction including and exclusive
+
+  The following extensions:
+
+  + Non-derived Let bindings
+  + General Recursion
+  + Product types with matching on products
+  + Sum types with matching on sums
+  + 'Cons'-style lists with matching
+
+ Programs in Olaf are defined as a sequence of global declarations that followed by an expression to run.
+
+* Implementation
+
+  Olaf is implemented in Idris.
