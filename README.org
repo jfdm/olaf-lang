@@ -1,35 +1,36 @@
 #+TITLE: Olaf
 
-I am interested in teaching programming language design, implementation, and theory.
-As part of this endeavour I try to get student projects to help think about interactive environments.
-I have let my students explore their own set of extensions to the STLC, however, I have decided to codify my own set of extensions and present a verified reference implementation, and well-typed interpreter for students to gain a feel for the language.
+I am interested in teaching /programming language design, implementation, and theory/ (PLDI).
+As part of this endeavour I try to get student projects to help think about interactive environments covering for students to explore interesting topics in PLDI.
+In the past I have let my students explore their own set of extensions to the STLC, however, I have decided to codify my own set of extensions to the STLC, and present a verified reference implementation and well-typed interpreter for students to gain a feel for the language they are realising environments for.
 
 This is Olaf.
 
 * Design
 
-  Olaf is the Simply-Typed Lambda Calculus:
+  Olaf is a pure functional language based on the Simply-Typed Lambda Calculus.
+  There are:
 
-  + functions
+  + anonymous functions
   + variables
   + function application
 
-  with the following base types:
+  Olaf supports the following base types:
 
   + Natural numbers
   + Booleans
   + Strings
   + Characters
 
-  The following builtin operations on these base types:
+  and the following primitive operations on these base types:
 
-  + On Strings:
+  + on Strings:
     + String length
-    + Packing and unpacking strings to list
+    + Packing and unpacking strings to lists
 
   + on characters:
-    + to their ordinal value
-    + the char represented by a given nat
+    + converting to their ordinal value
+    + converting an ordinal value to its char equivalent
 
   + on natural numbers
     + less than
@@ -40,16 +41,26 @@ This is Olaf.
     + conjunction
     + disjunction including and exclusive
 
-  The following extensions:
+  By design Olaf does not provide an exhaustive set of primitive operations as they can be realised from the presented primitives.
+  We could provide Natural numbers in their peano representation but that feels like a step too far.
+
+  Olaf also supports the following extensions:
 
   + Non-derived Let bindings
   + General Recursion
-  + Product types with matching on products
+  + Product types with matching
   + Sum types with matching on sums
-  + 'Cons'-style lists with matching
+  + 'Cons'-style lists with matching on empty and cons cases
 
- Programs in Olaf are defined as a sequence of global declarations that followed by an expression to run.
+ Programs in Olaf are defined as a sequence of global declarations, followed by a single expression to run.
 
 * Implementation
 
   Olaf is implemented in Idris.
+
+  We provide:
+
+  1. a well-typed interpreter to convert Olaf programs to valid Idris programs;
+  1. a simple parser to (*soon*) to read concrete Olaf programs;
+  1. a verified (*soon*) evaluator to run Olaf programs and produce Olaf values; and
+  1. a simple API to write Olaf programs as an EDSL in Idris itself.
