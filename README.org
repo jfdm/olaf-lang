@@ -60,7 +60,9 @@ This is Olaf.
 
   We provide:
 
+  1. a simple API to write Olaf programs as an EDSL in Idris itself;
+  1. a simple parser to to read concrete Olaf programs;
   1. a well-typed interpreter to convert Olaf programs to valid Idris programs;
-  1. a simple parser to (*soon*) to read concrete Olaf programs;
+     the interpreter works for Olaf programs written as an EDSL, and only for expressions written in concrete Olaf syntax; and
   1. a verified (*soon*) evaluator to run Olaf programs and produce Olaf values; and
-  1. a simple API to write Olaf programs as an EDSL in Idris itself.
+

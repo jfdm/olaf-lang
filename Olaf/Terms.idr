@@ -1,38 +1,15 @@
-module Olaf.Core
+module Olaf.Terms
+
+import Decidable.Equality
 
 import Data.Nat
 import Data.String
 import Data.List
 import Data.List.Elem
-import Data.Bool.Xor
+
+import Olaf.Types
 
 %default total
-
-namespace Types
-
-  public export
-  data Builtin = Nat | Bool | Str | Chr
-
-  namespace Ty
-    public export
-    data Ty = TyBuiltin Builtin
-            | TyList Ty | TyProduct Ty Ty | TySum Ty Ty
-            | TyFunc Ty Ty
-            | TyUnit
-
-  public export
-  TyNat, TyBool, TyString, TyChar : Ty
-  TyNat  = TyBuiltin Nat
-  TyBool = TyBuiltin Bool
-  TyString = TyBuiltin Str
-  TyChar   = TyBuiltin Chr
-
-  public export
-  PrimTy : Builtin -> Type
-  PrimTy Nat = Nat
-  PrimTy Bool = Bool
-  PrimTy Str = String
-  PrimTy Chr = Char
 
 namespace Context
   public export
@@ -166,7 +143,8 @@ namespace Terms
     -- [ STLC ]
     Var : Elem type ctxt -> Term ctxt type
 
-    Fun : (body : Term (ctxt += a) b)
+    Fun : (a : Ty)
+       -> (body : Term (ctxt += a) b)
                -> Term ctxt (TyFunc a b)
 
     App : (f : Term ctxt (TyFunc x y))

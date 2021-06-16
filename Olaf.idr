@@ -1,13 +1,10 @@
 module Olaf
 
-import public Data.Nat
-import public Data.String
-import public Data.List
 import public Data.List.Elem
-import public Data.Bool.Xor
 
-import public Olaf.Core
-import public Olaf.Interpreter
+
+import public Olaf.Types
+import public Olaf.Terms
 
 namespace API
   export

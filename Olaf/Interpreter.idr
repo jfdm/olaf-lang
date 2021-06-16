@@ -6,7 +6,8 @@ import Data.List
 import Data.List.Elem
 import Data.Bool.Xor
 
-import Olaf.Core
+import Olaf.Types
+import Olaf.Terms
 
 %default total
 
@@ -126,7 +127,7 @@ namespace Expr
   interp env (Var idx)
     = get env idx
 
-  interp env (Fun body) = \a => interp (a::env) body
+  interp env (Fun _ body) = \a => interp (a::env) body
 
   interp env (App f a)
     = (interp env f) (interp env a)
@@ -145,8 +146,21 @@ namespace Programme
   interp env (Decl decl prog)
     = Programme.interp (Expr.interp env decl::env) prog
 
-interp : (prog : Prog Nil type)
-              -> Type.interp type
-interp = Programme.interp Nil
+namespace Closed
+  namespace Expr
+    export
+    interp : (expr : Term Nil type)
+                  -> IO (Type.interp type)
+    interp e
+      = pure (Expr.interp Nil e)
+
+
+  namespace Programme
+
+    export
+    interp : (prog : Prog Nil type)
+                  -> (Type.interp type)
+    interp p
+      = (Programme.interp Nil p)
 
 -- [ EOF ]

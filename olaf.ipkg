@@ -1,6 +1,21 @@
 package olaf
 
-modules = Olaf.Core
+depends = contrib
+
+main = Olaf.Main
+
+executable = olaf
+
+modules = Olaf.Types
+        , Olaf.Terms
+        , Olaf
+
         , Olaf.Interpreter
 
-        , Olaf
+        , Olaf.Syntax.AST
+        , Olaf.Syntax.Lexer
+        , Olaf.Syntax.Parser
+        , Olaf.Syntax.Build
+        , Olaf.Syntax
+
+        , Olaf.Main
