@@ -1,7 +1,7 @@
 module Olaf
 
 import public Data.List.Elem
-
+import public Toolkit.Data.List.DeBruijn
 
 import public Olaf.Types
 import public Olaf.Terms
@@ -88,7 +88,8 @@ namespace API
 
   namespace List
     export
-    match : (what   : Term ctxt (TyList a))
+    match : {a,b : Ty}
+         -> (what   : Term ctxt (TyList a))
          -> (empty  : Term ctxt b)
          -> (extend : Term ((ctxt += a) += (TyList a)) b)
                    -> Term ctxt b
@@ -102,7 +103,8 @@ namespace API
 
   namespace Pair
     export
-    match : (pair  : Term ctxt (TyProduct a b))
+    match : {a,b,c : Ty}
+         -> (pair  : Term ctxt (TyProduct a b))
          -> (cases : Term ((ctxt += a) += b) c)
                   -> Term ctxt c
     match = MatchPair
@@ -119,7 +121,8 @@ namespace API
 
   namespace Variant
     export
-    match : (what : Term ctxt (TySum a b))
+    match : {a,b,c : Ty}
+         -> (what : Term ctxt (TySum a b))
          -> (this : Term (ctxt += a) c)
          -> (that : Term (ctxt += b) c)
                  -> Term ctxt c

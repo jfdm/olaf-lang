@@ -2,6 +2,8 @@ module Olaf.Terms
 
 import Decidable.Equality
 
+import public Toolkit.Data.List.DeBruijn
+
 import Data.Nat
 import Data.String
 import Data.List
@@ -15,12 +17,6 @@ namespace Context
   public export
   Context : Type
   Context = List Ty
-
-  infixr 6 +=
-
-  public export
-  (+=) : Context -> Ty -> Context
-  (+=) = flip (::)
 
 namespace Operations
 
@@ -102,7 +98,8 @@ namespace Terms
           -> (tail : Term ctxt (TyList a))
                   -> Term ctxt (TyList a)
 
-    MatchList : (what   : Term ctxt (TyList a))
+    MatchList : {a,b : Ty}
+             -> (what   : Term ctxt (TyList a))
              -> (empty  : Term ctxt b)
              -> (extend : Term ((ctxt += a) += (TyList a)) b)
                        -> Term ctxt b
@@ -111,7 +108,8 @@ namespace Terms
         -> (r : Term ctxt b)
              -> Term ctxt (TyProduct a b)
 
-    MatchPair : (pair  : Term ctxt (TyProduct a b))
+    MatchPair : {a,b,c : Ty}
+             -> (pair  : Term ctxt (TyProduct a b))
              -> (cases : Term ((ctxt += a) += b) c)
                       -> Term ctxt c
 
@@ -121,7 +119,8 @@ namespace Terms
     That : (e : Term ctxt b)
              -> Term ctxt (TySum a b)
 
-    MatchSum : (what : Term ctxt (TySum a b))
+    MatchSum : {a,b,c : Ty}
+            -> (what : Term ctxt (TySum a b))
             -> (this : Term (ctxt += a) c)
             -> (that : Term (ctxt += b) c)
                     -> Term ctxt c
@@ -136,18 +135,20 @@ namespace Terms
                -> Term ctxt a
 
     -- [ Bindings ]
-    Let : (this : Term ctxt a)
+    Let : {a,b : Ty}
+       -> (this : Term ctxt a)
        -> (body : Term (ctxt += a) b)
                -> Term ctxt b
 
     -- [ STLC ]
-    Var : Elem type ctxt -> Term ctxt type
+    Var : {type : Ty} -> Elem type ctxt -> Term ctxt type
 
     Fun : (a : Ty)
        -> (body : Term (ctxt += a) b)
                -> Term ctxt (TyFunc a b)
 
-    App : (f : Term ctxt (TyFunc x y))
+    App : {x,y : Ty}
+       -> (f : Term ctxt (TyFunc x y))
        -> (a : Term ctxt x)
             -> Term ctxt y
 
