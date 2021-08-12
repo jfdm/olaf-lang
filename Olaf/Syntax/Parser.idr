@@ -184,15 +184,15 @@ mutual
 
 
   type : Rule Ty
-  type =  typeFunc
-      <|> typeList
-      <|> typeSum
-      <|> typeProduct
-      <|> gives "Nat"    (const TyNat)
+  type =  gives "Nat"    (const TyNat)
       <|> gives "Bool"   (const TyBool)
       <|> gives "String" (const TyString)
       <|> gives "Char"   (const TyChar)
       <|> gives "Unit"   (const TyUnit)
+      <|> typeList
+      <|> typeSum
+      <|> typeProduct
+      <|> typeFunc
 
 bool : Rule Expr
 bool =  gives "true"  (\x => B x True)
