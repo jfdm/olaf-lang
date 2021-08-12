@@ -13,6 +13,8 @@ modules = Olaf.Types
         , Olaf.Terms.Renaming
         , Olaf.Terms.Substitution
 
+        , Olaf.Values
+
         , Olaf.Interpreter
 
         , Olaf.Syntax.AST
