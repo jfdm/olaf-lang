@@ -6,7 +6,7 @@ import Data.List
 
 import Data.List.Views
 import Data.List1
-import Data.Strings
+import Data.String
 import Data.Maybe
 
 import Text.Lexer
@@ -25,10 +25,19 @@ import Olaf.Syntax.AST
 
 %default total
 
+namespace Olaf
+  public export
+  Rule : Type -> Type
+  Rule = Rule () Token
+
+  public export
+  RuleEmpty : Type -> Type
+  RuleEmpty = RuleEmpty () Token
+
 namespace API
 
   export
-  eoi : RuleEmpty Token ()
+  eoi : RuleEmpty ()
   eoi = eoi isEOI
     where
       isEOI : Token -> Bool
@@ -36,53 +45,53 @@ namespace API
       isEOI _ = False
 
   export
-  symbol : String -> Rule Token ()
+  symbol : String -> Rule ()
   symbol str
     = terminal ("Expected Symbol '" ++ str ++ "'")
-               (\x => case tok x of
+               (\x => case x of
                              Symbol s => if s == str then Just ()
                                                      else Nothing
                              _ => Nothing)
 
   export
-  arrow : Rule Token ()
+  arrow : Rule ()
   arrow = symbol "->"
 
   export
-  assign : Rule Token ()
+  assign : Rule ()
   assign = symbol ":="
 
   export
-  suchThat : Rule Token ()
+  suchThat : Rule ()
   suchThat = symbol "=>"
 
   export
-  keyword : String -> Rule Token ()
+  keyword : String -> Rule ()
   keyword str
     = terminal ("Expected Keyword '" ++ str ++ "'")
-                 (\x => case tok x of
+                 (\x => case x of
                              Keyword s => if s == str then Just ()
                                                       else Nothing
                              _ => Nothing)
 
   export
-  natLit : Rule Token Nat
+  natLit : Rule Nat
   natLit = terminal "Expected nat literal"
-               (\x => case tok x of
+               (\x => case x of
                            LitNat i => Just i
                            _ => Nothing)
 
   export
-  strLit : Rule Token String
+  strLit : Rule String
   strLit = terminal "Expected string literal"
-               (\x => case tok x of
+               (\x => case x of
                            LitStr i => Just i
                            _ => Nothing)
 
   export
-  charLit : Rule Token Char
+  charLit : Rule Char
   charLit = terminal "Expected string literal"
-               (\x => case tok x of
+               (\x => case x of
                            LitChr i =>
                              case unpack i of
                                Nil => Just '\0000'
@@ -92,53 +101,53 @@ namespace API
 
 
   export
-  identifier : Rule Token String
+  identifier : Rule String
   identifier
     = terminal "Expected Identifier"
-               (\x => case tok x of
+               (\x => case x of
                                   ID str => Just str
                                   _ => Nothing)
 
   export
-  name : Rule Token String
+  name : Rule String
   name = identifier
 
   export
-  parens : Inf (Rule Token a)
-        -> Rule Token a
-  parens = between (symbol "(") (symbol ")")
+  parens : Inf (Rule a)
+        -> Rule a
+  parens p = between (symbol "(") (symbol ")") p
 
   export
-  arrowSepBy1 : Rule Token a -> Rule Token (List1 a)
+  arrowSepBy1 : Rule a -> Rule (List1 a)
   arrowSepBy1 = sepBy1 arrow
 
   export
-  commaSepBy1 : Rule Token a -> Rule Token (List1 a)
+  commaSepBy1 : Rule a -> Rule (List1 a)
   commaSepBy1 = sepBy1 (symbol ",")
 
   export
-  gives : String -> (FileContext -> a) -> Rule Token a
+  gives : String -> (FileContext -> a) -> Rule a
   gives s ctor
-    = do a <- location
+    = do a <- Toolkit.location
          keyword s
-         b <- location
+         b <- Toolkit.location
          pure (ctor (newFC a b))
 
 
   export
-  inserts : Rule Token a -> (FileContext -> a -> b) -> Rule Token b
+  inserts : Rule a -> (FileContext -> a -> b) -> Rule b
   inserts value ctor
-    = do a <- location
+    = do a <- Toolkit.location
          v <- value
-         b <- location
+         b <- Toolkit.location
          pure (ctor (newFC a b) v)
 
-ref : Rule Token Expr
+ref : Rule Expr
 ref = inserts name    Ref
 
 mutual
 
-  typeList : Rule Token Ty
+  typeList : Rule Ty
   typeList =
     do symbol "("
        keyword "List"
@@ -146,7 +155,7 @@ mutual
        symbol ")"
        pure (TyList ty)
 
-  typeSum : Rule Token Ty
+  typeSum : Rule Ty
   typeSum =
     do symbol "("
        keyword "Sum"
@@ -155,7 +164,7 @@ mutual
        symbol ")"
        pure (TySum a b)
 
-  typeProduct : Rule Token Ty
+  typeProduct : Rule Ty
   typeProduct =
     do symbol "("
        keyword "Pair"
@@ -164,7 +173,7 @@ mutual
        symbol ")"
        pure (TyProduct a b)
 
-  typeFunc : Rule Token Ty
+  typeFunc : Rule Ty
   typeFunc
     = do symbol "("
          a <- type
@@ -174,7 +183,7 @@ mutual
          pure $ TyFunc a bs
 
 
-  type : Rule Token Ty
+  type : Rule Ty
   type =  typeFunc
       <|> typeList
       <|> typeSum
@@ -185,11 +194,11 @@ mutual
       <|> gives "Char"   (const TyChar)
       <|> gives "Unit"   (const TyUnit)
 
-bool : Rule Token Expr
+bool : Rule Expr
 bool =  gives "true"  (\x => B x True)
     <|> gives "false" (\x => B x False)
 
-prim : Rule Token Expr
+prim : Rule Expr
 prim =  ref
     <|> inserts natLit  N
     <|> inserts charLit C
@@ -197,42 +206,42 @@ prim =  ref
     <|> bool
 
 mutual
-  tuple : Rule Token Expr
+  tuple : Rule Expr
   tuple =
-    do s <- location
+    do s <- Toolkit.location
        symbol "("
        a <- expr
        symbol ","
        b <- expr
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (Pair (newFC s e) a b)
 
-  listExt : Rule Token Expr
+  listExt : Rule Expr
   listExt =
-     do s <- location
+     do s <- Toolkit.location
         symbol "("
         keyword "extend"
         h <- expr
         t <- expr
         symbol ")"
-        e <- location
+        e <- Toolkit.location
         pure (Extend (newFC s e) h t)
 
-  empty : Rule Token Expr
+  empty : Rule Expr
   empty =
-    do s <- location
+    do s <- Toolkit.location
        keyword "empty"
        symbol "["
        ty <- type
        symbol "]"
-       e <- location
+       e <- Toolkit.location
        pure (Empty (newFC s e) ty)
 
-  primOp : Rule Token Expr
+  primOp : Rule Expr
   primOp = uOp <|> bOp
     where
-      uOpKind : Rule Token UnOp
+      uOpKind : Rule UnOp
       uOpKind =  gives "not" (const BNot)
              <|> gives "size" (const (SOp SIZE))
              <|> gives "pack" (const (SOp PACK))
@@ -241,17 +250,17 @@ mutual
              <|> gives "toNat" (const (COp ORD))
              <|> gives "toChar" (const (COp CHAR))
 
-      uOp : Rule Token Expr
+      uOp : Rule Expr
       uOp =
-        do s <- location
+        do s <- Toolkit.location
            symbol "("
            k <- uOpKind
            o <- (ref <|> expr)
            symbol ")"
-           e <- location
+           e <- Toolkit.location
            pure (UOp (newFC s e) k o)
 
-      bOpKind : Rule Token BinOp
+      bOpKind : Rule BinOp
       bOpKind =  gives "lessThan" (const NCmp)
              <|> gives "add" (const (NOp PLUS))
              <|> gives "sub" (const (NOp SUB))
@@ -259,74 +268,74 @@ mutual
              <|> gives "or" (const (BOp OR))
              <|> gives "xor" (const (BOp XOR))
 
-      bOp : Rule Token Expr
+      bOp : Rule Expr
       bOp =
-        do s <- location
+        do s <- Toolkit.location
            symbol "("
            k <- bOpKind
            a <- (ref <|> expr)
            b <- (ref <|> expr)
            symbol ")"
-           e <- location
+           e <- Toolkit.location
            pure (BOp (newFC s e) k a b)
 
 
-  this, that : Rule Token Expr
+  this, that : Rule Expr
   this =
-    do s <- location
+    do s <- Toolkit.location
        symbol "("
        keyword "this"
        t <- (ref <|> expr)
        keyword "as"
        ty <- type
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (This (newFC s e) t ty)
 
   that =
-    do s <- location
+    do s <- Toolkit.location
        symbol "("
        keyword "that"
        t <- (ref <|> expr)
        keyword "as"
        ty <- type
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (That (newFC s e) t ty)
 
-  funAnon : Rule Token Expr
+  funAnon : Rule Expr
   funAnon =
-    do s <- location
+    do s <- Toolkit.location
        symbol "("
        keyword "fun"
-       args <- commaSepBy1 (do a <- location
+       args <- commaSepBy1 (do a <- Toolkit.location
                                n <- name
                                symbol ":"
                                ty <- type
-                               b <- location
+                               b <- Toolkit.location
                                pure (newFC a b, n, ty))
        suchThat
        body <- expr
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (foldr (\(fc,n,ty),acc => Fun fc n ty acc) body (forget args))
 
 
-  cond : Rule Token Expr
+  cond : Rule Expr
   cond =
-    do s <- location
+    do s <- Toolkit.location
        keyword "if"
        c <- (ref <|> expr)
        keyword "then"
        t <- expr
        keyword "else"
        f <- expr
-       e <- location
+       e <- Toolkit.location
        pure (Cond (newFC s e) c t f)
 
-  let_ : Rule Token Expr
+  let_ : Rule Expr
   let_ =
-    do s <- location
+    do s <- Toolkit.location
        keyword "let"
        rec <- optional (keyword "rec")
        n <- name
@@ -336,37 +345,37 @@ mutual
        v <- expr
        keyword "in"
        b <- expr
-       e <- location
+       e <- Toolkit.location
        pure (Let (newFC s e) n ty (isJust rec) v b)
 
-  app : Rule Token Expr
+  app : Rule Expr
   app =
-    do s <- location
+    do s <- Toolkit.location
        symbol "("
        keyword "apply"
        f <- expr
        a <- expr
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (App (newFC s e) f a)
 
-  unit : Rule Token Expr
+  unit : Rule Expr
   unit = gives "unit" TheUnit
 
-  ascription : Rule Token Expr
+  ascription : Rule Expr
   ascription =
-    do s <- location
+    do s <- Toolkit.location
        symbol "("
        keyword "the"
        ty <- type
        v  <- expr
        symbol ")"
-       e <- location
+       e <- Toolkit.location
        pure (The (newFC s e) ty v)
 
-  match_pair : Rule Token Expr
+  match_pair : Rule Expr
   match_pair
-    = do s <- location
+    = do s <- Toolkit.location
          keyword "match"
          c <- expr
          keyword "as"
@@ -379,12 +388,12 @@ mutual
          suchThat
          r <- expr
          symbol "}"
-         e <- location
+         e <- Toolkit.location
          pure (MatchPair (newFC s e) c a b r)
 
-  match_list : Rule Token Expr
+  match_list : Rule Expr
   match_list
-    = do s <- location
+    = do s <- Toolkit.location
          keyword "match"
          c <- expr
          keyword "as"
@@ -399,12 +408,12 @@ mutual
          suchThat
          rest <- expr
          symbol "}"
-         e <- location
+         e <- Toolkit.location
          pure (MatchList (newFC s e) c emp h t rest)
 
-  match_sum : Rule Token Expr
+  match_sum : Rule Expr
   match_sum
-    = do s <- location
+    = do s <- Toolkit.location
          keyword "match"
          c <- expr
          keyword "as"
@@ -419,10 +428,10 @@ mutual
          suchThat
          br <- expr
          symbol "}"
-         e <- location
+         e <- Toolkit.location
          pure (MatchSum (newFC s e) c l bl r br)
 
-  expr : Rule Token Expr
+  expr : Rule Expr
   expr =   ref
        <|> let_
        <|> app
@@ -441,19 +450,19 @@ mutual
        <|> funAnon
        <|> ascription
 
-main_ : Rule Token Prog
+main_ : Rule Prog
 main_ =
-  do s <- location
+  do s <- Toolkit.location
      keyword "main"
      assign
      v <- expr
-     e <- location
+     e <- Toolkit.location
      pure (Main (newFC s e) v)
 
 
-decl : Rule Token (FileContext, String, Ty, Bool, Expr)
+decl : Rule (FileContext, String, Ty, Bool, Expr)
 decl =
-  do s <- location
+  do s <- Toolkit.location
      keyword "def"
      rec <- optional (keyword "rec")
      n <- name
@@ -461,10 +470,10 @@ decl =
      t <- type
      assign
      v <- expr
-     e <- location
+     e <- Toolkit.location
      pure (newFC s e, n, t, isJust rec, v)
 
-olaf : Rule Token Prog
+olaf : Rule Prog
 olaf =
   do ds <- many decl
      m <- main_
@@ -478,14 +487,14 @@ namespace Olaf
   namespace Expression
     export
     fromString : (str : String)
-                     -> (Either (Run.ParseError Token) Expr)
+                     -> (Either (ParseError Token) Expr)
     fromString str
       = parseString Olaf.lexer expr str
 
   namespace Programme
     export
     fromFile : (fname : String)
-                     -> IO (Either (Run.ParseError Token) Prog)
+                     -> IO (Either (ParseError Token) Prog)
     fromFile fname
       = case !(parseFile Olaf.lexer olaf fname) of
           Left err  => pure (Left err)

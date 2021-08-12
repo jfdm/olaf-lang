@@ -3,6 +3,7 @@ module Olaf.Main
 import System
 import System.File
 
+import Data.List1
 import Data.String
 import Data.Either
 
@@ -14,6 +15,10 @@ import Olaf.Syntax
 import Olaf.Interpreter
 
 
+export
+Show a => Show (ParseFailure a) where
+  show err
+    = trim $ unlines [show (location err), (error err)]
 
 export
 Show a => Show (Run.ParseError a) where
@@ -21,10 +26,8 @@ Show a => Show (Run.ParseError a) where
     = trim $ unlines ["File Error: "
                      , show err]
   show (PError err)
-    = trim $ unlines [ maybe "" show (location err)
-                     , error err
-                     , show (rest err)
-                     ]
+    = trim $ unlines (forget (map show err))
+
   show (LError (MkLexFail l i))
     = trim $ unlines [show l, show i]
 

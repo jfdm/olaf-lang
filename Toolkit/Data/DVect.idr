@@ -12,7 +12,7 @@
 module Toolkit.Data.DVect
 
 import Data.Nat
-import Data.Strings
+import Data.String
 
 import public Data.Vect
 import public Data.Vect.Elem

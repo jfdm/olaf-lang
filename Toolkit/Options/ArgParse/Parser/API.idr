@@ -1,7 +1,7 @@
 module Toolkit.Options.ArgParse.Parser.API
 
 import Data.List
-import Data.Strings
+import Data.String
 
 import Text.Token
 import Text.Lexer

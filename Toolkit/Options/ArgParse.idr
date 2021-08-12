@@ -6,7 +6,7 @@
 module Toolkit.Options.ArgParse
 
 import Data.List
-import Data.Strings
+import Data.String
 
 import        Toolkit.Options.ArgParse.Lexer
 import        Toolkit.Options.ArgParse.Parser

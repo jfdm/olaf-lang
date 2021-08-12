@@ -5,7 +5,7 @@
 -- --------------------------------------------------------------------- [ EOH ]
 module Toolkit.Options.ArgParse.Test
 
-import Data.Strings
+import Data.String
 
 import Data.Either
 import Data.Maybe

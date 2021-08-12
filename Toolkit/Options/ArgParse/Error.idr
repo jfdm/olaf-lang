@@ -6,7 +6,7 @@
 
 module Toolkit.Options.ArgParse.Error
 
-import Data.Strings
+import Data.String
 
 import System.File
 

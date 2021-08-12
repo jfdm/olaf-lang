@@ -138,12 +138,13 @@ namespace SystemV
     , (any, NotRecognised)
     ]
 
-keep : TokenData SystemV.Token -> Bool
-keep t = case tok t of
-    BlockComment _ => False
-    LineComment  _ => False
-    WS           _ => False
-    _              => True
+keep : WithBounds SystemV.Token -> Bool
+keep (MkBounded t _ _)
+  = case t of
+      BlockComment _ => False
+      LineComment  _ => False
+      WS           _ => False
+      _              => True
 
 namespace Olaf
   export
@@ -152,10 +153,10 @@ namespace Olaf
 
   namespace String
     export
-    lex : String -> Either LexError (List (TokenData Token))
+    lex : String -> Either LexError (List (WithBounds Token))
     lex = lexString Olaf.lexer
 
   namespace File
     export
-    lex : String -> IO $ Either LexFail (List (TokenData Token))
+    lex : String -> IO $ Either LexFail (List (WithBounds Token))
     lex = lexFile Olaf.lexer
