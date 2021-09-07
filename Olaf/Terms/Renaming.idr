@@ -5,6 +5,7 @@ import Toolkit.Data.List.DeBruijn
 import Olaf.Types
 import Olaf.Terms
 
+%default total
 
 public export
 Rename Ty Term where

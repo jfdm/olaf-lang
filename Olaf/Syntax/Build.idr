@@ -378,50 +378,14 @@ namespace Expr
          e <- hasType fc ty eres
          pure (R ctxt ty e)
 
-namespace Programme
-  export
-  build : (ctxt : Context types)
-       -> (p    : Prog)
-       -> Build (type ** Prog types type)
-  build ctxt (Decl fc x ty rec value rest)
-    = if rec
-      then do R _ ty' e <- build (MkName x ty :: ctxt) value
-              case decEq ty ty' of
-                No contra => Left (Err fc (MMatch ty ty'))
-                Yes Refl  =>
-                  do res <- build (MkName x ty :: ctxt) rest
-                     pure (fst res ** Decl (Rec e) (snd res))
-      else do R _ ty' e <- build ctxt value
-              case decEq ty ty' of
-                No _ => Left (Err fc (MMatch ty ty'))
-                Yes Refl =>
-                  do res <- build (MkName x ty' :: ctxt) rest
-                     pure (fst res ** Decl e (snd res))
-
-  build ctxt (Main fc expr)
-    = do R ctxt ty e <- Expr.build ctxt expr
-         pure (ty ** Main e)
-
 namespace Closed
 
-  namespace Expression
-
-    export
-    build : (e : Expr)
-         -> IO (Build (Result Nil))
-    build e
-      = case build Nil e of
-         Left err => pure (Left err)
-         Right res => pure (Right res)
-
-  namespace Programme
-
-    export
-    build : (p : Prog)
-         -> IO (Build (ty ** Prog Nil ty))
-    build p
-      = case build Nil p of
-          Left err => pure (Left err)
-          Right res => pure (Right res)
+  export
+  build : (e : Expr)
+            -> IO (Build (Result Nil))
+  build e
+    = case build Nil e of
+       Left err => pure (Left err)
+       Right res => pure (Right res)
 
 -- [ EOF ]

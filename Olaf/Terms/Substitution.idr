@@ -7,6 +7,8 @@ import Olaf.Terms
 
 import Olaf.Terms.Renaming
 
+%default total
+
 
 public export
 Substitute Ty Term where
@@ -14,9 +16,9 @@ Substitute Ty Term where
   subst f (B x)
     = B x
 
-  subst f (BOp (NOp x) l r) = BOp (NOp x) (General.subst f l) (General.subst f r)
-  subst f (BOp (BOp x) l r) = BOp (BOp x) (General.subst f l) (General.subst f r)
-  subst f (BOp NCmp    l r) = BOp NCmp    (General.subst f l) (General.subst f r)
+  subst f (BOp (NOp x) l r) = BOp (NOp x) (subst f l) (General.subst f r)
+  subst f (BOp (BOp x) l r) = BOp (BOp x) (subst f l) (General.subst f r)
+  subst f (BOp NCmp    l r) = BOp NCmp    (subst f l) (General.subst f r)
 
   subst f (UOp BNot         e) = UOp BNot         (General.subst f e)
   subst f (UOp (SOp SIZE)   e) = UOp (SOp SIZE)   (General.subst f e)
@@ -36,7 +38,7 @@ Substitute Ty Term where
   subst f (MatchList what empty extend)
     = MatchList (General.subst f what)
                 (General.subst f empty)
-                (General.subst (weakens (weakens f) extend)
+                (General.subst (weakens (weakens f)) extend)
 
   subst f (Pair l r)
     = Pair (General.subst f l)
@@ -44,7 +46,7 @@ Substitute Ty Term where
 
   subst f (MatchPair pair cases)
     = MatchPair (General.subst f pair)
-                (General.subst ((weakens . weakens) f) cases)
+                (General.subst (weakens (weakens f)) cases)
 
   subst f (This e)
     = This (General.subst f e)

@@ -14,31 +14,26 @@ import Olaf.Terms
 
 %default total
 
-namespace Term
-  public export
-  data Value : Term ctxt type -> Type where
-    -- [ Prims ]
-    B : Value (B v)
 
-    -- [ Data ]
-    Empty : Value Empty
+public export
+data Value : Term ctxt type -> Type where
+  -- [ Prims ]
+  B : Value (B v)
 
-    Extend : Value h -> Value t -> Value (Extend h t)
+  -- [ Data ]
+  Empty : Value Empty
 
-    Pair : Value f -> Value s -> Value (Pair f s)
+  Extend : Value h -> Value t -> Value (Extend h t)
 
-    This : Value t -> Value (This t)
-    That : Value t -> Value (That t)
+  Pair : Value f -> Value s -> Value (Pair f s)
 
-    U : Value U
+  This : Value t -> Value (This t)
+  That : Value t -> Value (That t)
 
-    Fun : {body : Term (ctxt += type) btype}
-               -> Value (Fun type body)
+  U : Value U
 
+  Fun : {body : Term (ctxt += type) btype}
+             -> Value (Fun type body)
 
-namespace Prog
-  public export
-  data Value : Prog ctxt type -> Type where
-    Main : Term.Value v -> Value (Main v)
 
 -- [ EOF ]

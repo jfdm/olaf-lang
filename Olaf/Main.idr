@@ -11,8 +11,11 @@ import Toolkit.Data.Location
 
 import Olaf
 import Olaf.Syntax
+import Olaf.Types
+import Olaf.Terms
+import Olaf.Values
 
-import Olaf.Interpreter
+import Olaf.Semantics.Evaluation
 
 
 export
@@ -51,8 +54,8 @@ sexpr : String -> String -> String
 sexpr t e = unwords ["(" <+> t, e <+> ")"]
 
 namespace Expr
-  export
-  show : Expr.AST a -> String
+
+  show : AST a -> String
   show (Ref x y) = show y
 
   show (S x y) = show y
@@ -62,7 +65,7 @@ namespace Expr
 
   show (UOp fc k expr) = sexpr (showKind k) (show expr)
     where
-      showKind : UnOp -> String
+      showKind : UnOp tyA tyR -> String
       showKind BNot = "not"
       showKind (SOp SIZE) = "size"
       showKind (SOp PACK) = "pack"
@@ -73,7 +76,7 @@ namespace Expr
 
   show (BOp fc k l r) = sexpr (showKind k) (unwords [show l, show r])
     where
-      showKind : BinOp -> String
+      showKind : BinOp tyA tyR -> String
       showKind (NOp PLUS) = "add"
       showKind (NOp SUB) = "sub"
       showKind (BOp AND) = "and"
@@ -116,19 +119,34 @@ namespace Expr
   show (The x y z) = unwords ["(the", show y, show z <+>")"]
 
   export
-  Show (Expr.AST a) where
+  Show (AST a) where
     show = Expr.show
 
-namespace Prog
-  show : Prog.AST a -> String
-  show (Decl fc n ty rec value rest)
-    = sexpr ("decl" <+> if rec then "rec" else "")
-            (unwords [n, ":", show ty, ":=", Expr.show value, "in", show rest])
-  show (Main fc expr) = sexpr "main" (Expr.show expr)
-
+namespace Term
   export
-  Show (Prog.AST a) where
-    show = Prog.show
+  showTerm : (term : Term Nil ty) -> Value term -> String
+  showTerm (B {b = Nat} v) B  = show v
+  showTerm (B {b = Bool} v) B = show v
+  showTerm (B {b = Str} v) B  = show v
+  showTerm (B {b = Chr} v) B  = show v
+
+  showTerm Empty Empty = "[]"
+  showTerm (Extend h t) (Extend x y)
+    = concat [showTerm h x, "::", showTerm t y]
+
+  showTerm (Pair f s) (Pair x y)
+    = concat ["(", showTerm f x, ",", showTerm s y, ")"]
+
+  showTerm (This t) (This x)
+    = concat ["(This ", showTerm t x,")"]
+
+  showTerm (That t) (That x)
+    = concat ["(That ", showTerm t x,")"]
+
+  showTerm U U = "U"
+
+  showTerm (Fun type body) Fun
+    = concat ["(fun...",")"]
 
 export
 Show Error where
@@ -160,20 +178,24 @@ main
           | Left err => do printLn err
                            exitFailure
 
-       putStrLn "Parsing"
+       putStrLn "Parsed"
 
        printLn ast
 
-       Right term <- Closed.Programme.build ast
+       Right (R Nil type term) <- Closed.build ast
           | Left err => do printLn err
                            exitFailure
 
-       putStrLn "Checking"
+       putStrLn "Checked"
 
-       -- res <- Closed.Programme.interp (snd term)
-
-       -- putStrLn "Running"
-       exitSuccess
+       putStrLn "Running"
+       case run term of
+         Nothing => do printLn "Ran out of fuel"
+                       exitFailure
+         Just (R t v steps)
+           => do putStrLn (showTerm t v)
+                 putStrLn "\n"
+                 exitSuccess
 
 
 -- [ EOF ]

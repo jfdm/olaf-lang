@@ -241,14 +241,14 @@ mutual
   primOp : Rule Expr
   primOp = uOp <|> bOp
     where
-      uOpKind : Rule UnOp
-      uOpKind =  gives "not" (const BNot)
-             <|> gives "size" (const (SOp SIZE))
-             <|> gives "pack" (const (SOp PACK))
-             <|> gives "unpack" (const (SOp UNPACK))
-             <|> gives "toString" (const (COp TOSTR))
-             <|> gives "toNat" (const (COp ORD))
-             <|> gives "toChar" (const (COp CHAR))
+      uOpKind : Rule (tyA ** tyB ** UnOp tyA tyB)
+      uOpKind =  gives "not" (const (_ ** _ ** BNot))
+             <|> gives "size" (const (_ ** _ ** SOp SIZE))
+             <|> gives "pack" (const (_ ** _ ** SOp PACK))
+             <|> gives "unpack" (const (_ ** _ ** SOp UNPACK))
+             <|> gives "toString" (const (_ ** _ ** COp TOSTR))
+             <|> gives "toNat" (const (_ ** _ ** COp ORD))
+             <|> gives "toChar" (const (_ ** _ ** COp CHAR))
 
       uOp : Rule Expr
       uOp =
@@ -258,15 +258,15 @@ mutual
            o <- (ref <|> expr)
            symbol ")"
            e <- Toolkit.location
-           pure (UOp (newFC s e) k o)
+           pure (UOp (newFC s e) (snd (snd k)) o)
 
-      bOpKind : Rule BinOp
-      bOpKind =  gives "lessThan" (const NCmp)
-             <|> gives "add" (const (NOp PLUS))
-             <|> gives "sub" (const (NOp SUB))
-             <|> gives "and" (const (BOp AND))
-             <|> gives "or" (const (BOp OR))
-             <|> gives "xor" (const (BOp XOR))
+      bOpKind : Rule (tyA ** tyB ** BinOp tyA tyB)
+      bOpKind =  gives "lessThan" (const (_ ** _ ** NCmp))
+             <|> gives "add" (const (_ ** _ ** NOp PLUS))
+             <|> gives "sub" (const (_ ** _ ** NOp SUB))
+             <|> gives "and" (const (_ ** _ ** BOp AND))
+             <|> gives "or" (const (_ ** _ ** BOp OR))
+             <|> gives "xor" (const (_ ** _ ** BOp XOR))
 
       bOp : Rule Expr
       bOp =
@@ -277,7 +277,7 @@ mutual
            b <- (ref <|> expr)
            symbol ")"
            e <- Toolkit.location
-           pure (BOp (newFC s e) k a b)
+           pure (BOp (newFC s e) (snd (snd k)) a b)
 
 
   this, that : Rule Expr
@@ -450,14 +450,14 @@ mutual
        <|> funAnon
        <|> ascription
 
-main_ : Rule Prog
+main_ : Rule Expr
 main_ =
   do s <- Toolkit.location
      keyword "main"
      assign
      v <- expr
      e <- Toolkit.location
-     pure (Main (newFC s e) v)
+     pure v
 
 
 decl : Rule (FileContext, String, Ty, Bool, Expr)
@@ -473,13 +473,13 @@ decl =
      e <- Toolkit.location
      pure (newFC s e, n, t, isJust rec, v)
 
-olaf : Rule Prog
+olaf : Rule Expr
 olaf =
   do ds <- many decl
      m <- main_
      eoi
      pure (foldr (\(fc, n, ty, rec, v),acc =>
-                      Decl fc n ty rec v acc)
+                      Let fc n ty rec v acc)
                  m ds)
 
 namespace Olaf
@@ -494,7 +494,7 @@ namespace Olaf
   namespace Programme
     export
     fromFile : (fname : String)
-                     -> IO (Either (ParseError Token) Prog)
+                     -> IO (Either (ParseError Token) Expr)
     fromFile fname
       = case !(parseFile Olaf.lexer olaf fname) of
           Left err  => pure (Left err)

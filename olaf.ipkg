@@ -15,6 +15,12 @@ modules = Olaf.Types
 
         , Olaf.Values
 
+        , Olaf.Semantics.Reductions.Pack
+        , Olaf.Semantics.Reductions.Builtins
+        , Olaf.Semantics.Reductions
+        , Olaf.Semantics.Progress
+        , Olaf.Semantics.Evaluation
+
         , Olaf.Interpreter
 
         , Olaf.Syntax.AST
