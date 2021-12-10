@@ -18,12 +18,10 @@ import Olaf.Values
 import Olaf.Semantics.Evaluation
 
 
-export
 Show a => Show (ParseFailure a) where
   show err
     = trim $ unlines [show (location err), (error err)]
 
-export
 Show a => Show (Run.ParseError a) where
   show (FError err)
     = trim $ unlines ["File Error: "
@@ -34,14 +32,12 @@ Show a => Show (Run.ParseError a) where
   show (LError (MkLexFail l i))
     = trim $ unlines [show l, show i]
 
-export
 Show Builtin where
   show Nat = "Nat"
   show Bool = "Bool"
   show Str = "String"
   show Chr = "Char"
 
-export
 Show Ty where
   show (TyBuiltin x) = show x
   show (TyList x) = "(List " <+> show x <+> ")"
@@ -54,6 +50,26 @@ sexpr : String -> String -> String
 sexpr t e = unwords ["(" <+> t, e <+> ")"]
 
 namespace Expr
+  namespace BOp
+    export
+    showKind : BinOp tyA tyR -> String
+    showKind (NOp PLUS) = "add"
+    showKind (NOp SUB) = "sub"
+    showKind (BOp AND) = "and"
+    showKind (BOp OR) = "or"
+    showKind (BOp XOR) = "xor"
+    showKind NCmp = "lt"
+
+  namespace UOp
+    export
+    showKind : UnOp tyA tyR -> String
+    showKind BNot = "not"
+    showKind (SOp SIZE) = "size"
+    showKind (SOp PACK) = "pack"
+    showKind (SOp UNPACK) = "unpack"
+    showKind (COp TOSTR) = "toString"
+    showKind (COp ORD) = "toNat"
+    showKind (COp CHAR) = "toChar"
 
   show : AST a -> String
   show (Ref x y) = show y
@@ -64,25 +80,8 @@ namespace Expr
   show (N x k) = show k
 
   show (UOp fc k expr) = sexpr (showKind k) (show expr)
-    where
-      showKind : UnOp tyA tyR -> String
-      showKind BNot = "not"
-      showKind (SOp SIZE) = "size"
-      showKind (SOp PACK) = "pack"
-      showKind (SOp UNPACK) = "unpack"
-      showKind (COp TOSTR) = "toString"
-      showKind (COp ORD) = "toNat"
-      showKind (COp CHAR) = "toChar"
 
   show (BOp fc k l r) = sexpr (showKind k) (unwords [show l, show r])
-    where
-      showKind : BinOp tyA tyR -> String
-      showKind (NOp PLUS) = "add"
-      showKind (NOp SUB) = "sub"
-      showKind (BOp AND) = "and"
-      showKind (BOp OR) = "or"
-      showKind (BOp XOR) = "xor"
-      showKind NCmp = "lt"
 
   show (MatchPair fc c l r body)
     = sexpr "match" (unwords [ show c, "as"
@@ -148,7 +147,111 @@ namespace Term
   showTerm (Fun type body) Fun
     = concat ["(fun...",")"]
 
-export
+  export
+  showTerm' : (term : Term ctxt ty) -> String
+  showTerm' (B {b = Nat} x)  = show x
+  showTerm' (B {b = Bool} x) = show x
+  showTerm' (B {b = Str} x)  = show x
+  showTerm' (B {b = Chr} x)  = show x
+
+  showTerm' (BOp kind l r)
+    = unwords ["(" <+> showKind kind, showTerm' l, showTerm' r <+> ")"]
+
+  showTerm' (UOp kind e)
+    = unwords ["(" <+> showKind kind, showTerm' e <+> ")"]
+
+  showTerm' Empty
+    = "empty"
+  showTerm' (Extend head tail)
+    = unwords ["(extend", showTerm' head, showTerm' tail <+>")"]
+  showTerm' (MatchList what empty extend)
+    = unwords ["(match", showTerm' what, "{", showTerm' empty, "|", showTerm' extend <+> "})"]
+
+
+  showTerm' (Pair l r)
+    = unwords ["(" <+> showTerm' l <+> ",", showTerm' r <+> ")"]
+  showTerm' (MatchPair pair cases)
+    = unwords ["(match", showTerm' pair, "{", showTerm' cases <+> "})"]
+
+  showTerm' (This e)
+    = unwords ["(this" <+> showTerm' e <+> ")"]
+  showTerm' (That e)
+    = unwords ["(that" <+> showTerm' e <+> ")"]
+  showTerm' (MatchSum what this that)
+    = unwords ["(match", showTerm' what, "{", showTerm' this, "|", showTerm' that <+> "})"]
+
+  showTerm' (Cond test tt ff)
+    = unwords ["(f", showTerm' test, "{", showTerm' tt, "} else {", showTerm' tt <+> "})"]
+
+  showTerm' (Rec this)
+    = unwords ["(rec" <+> showTerm' this <+> ")"]
+
+  showTerm' (Let this body)
+    = unwords ["(let", showTerm' this, "in {", showTerm' body <+> "})"]
+
+  showTerm' (Var x)
+      = unwords ["(var", showElem x <+> ")"]
+    where
+      showElem : Elem ty xs -> String
+      showElem Here = "Here"
+      showElem (There x) = unwords ["(T", showElem x <+>")"]
+
+  showTerm' (Fun a body)
+    = unwords ["(\\" <+> show a, "->", "{" <+> showTerm' body <+> "})"]
+  showTerm' (App f a)
+    = unwords ["(apply", showTerm' f, showTerm' a, ")"]
+
+  showTerm' U
+    = "unit"
+
+  showTerm' (The ty term)
+    = unwords ["the", show ty, showTerm' term]
+
+namespace Eval
+
+  showRedux : Redux a b -> String
+  showRedux (SimplifyBOpLeft x) = "= Simplify Left Operand"
+  showRedux (SimplifyBOpRight x y) = "= Simplify Right Operand"
+  showRedux (ReduceBOp vl vr x) = "= Reduce Binary Operation"
+  showRedux (SimplifyUOp x) = "= Simplify Unary Operation"
+  showRedux (ReduceUOp val prf) = "= Reduce Unary Operand"
+  showRedux (ReduceListHead x) = "= Reduce List Head"
+  showRedux (ReduceListTail x) = "= Reduce List Tail"
+  showRedux (SimplifyMatchList x) = "= Simplify Match List"
+  showRedux ReduceMatchListNil = "= Reduce Match List Nil"
+  showRedux ReduceMatchListCons = "= Reduce Match List Cons"
+  showRedux (SimplifyPairLeft x)  = "= Simplify Left"
+  showRedux (SimplifyPairRight x) = "= Simplify Right"
+  showRedux (SimplifyMatchPair x) = "= Simplify Match Pair"
+  showRedux ReduceMatchPair = "= Reduce Match Pair"
+  showRedux (SimplifyThis x) = "= Simplify This"
+  showRedux (SimplifyThat x) = "= Simplify That"
+  showRedux (SimplifyMatchSum x) = "= Simplify Match Sum"
+  showRedux ReduceMatchSumThis = "= Reduce Match Sum This"
+  showRedux ReduceMatchSumThat = "= Reduce Match Sum That"
+  showRedux (SimplifyCond x) = "= Simplify Conditional"
+  showRedux ReduceCondTrue  = "= Reduce Conditional True"
+  showRedux ReduceCondFalse = "= Reduce Conditional False"
+  showRedux ReduceRec = "= Reduce Recursion"
+  showRedux ReduceLet = "= Reduce Let Binding"
+  showRedux (SimplifyFuncAppFunc func) = "= Simplify Application Function"
+  showRedux (SimplifyFuncAppVar value var) = "= Simplify Application Variable"
+  showRedux (ReduceFuncApp x) = "= Reduce Application"
+  showRedux ReduceThe = "= Reduce The"
+
+  showReduces : {a,b : Term Nil ty} -> Reduces a b -> List String
+  showReduces {a = a} {b = a} Refl
+    = [showTerm' a]
+  showReduces {a = a} {b = b} (Trans x y)
+    = showTerm' a :: showRedux x :: showReduces y
+
+
+  export
+  showEvalRes : {term : Term Nil ty} -> (res : EvalResult term) -> String
+  showEvalRes {term = term} (R that val steps)
+    = trim $ unlines (showReduces steps)
+
+
 Show Error where
   show (Err x y)
     = trim $ unlines ["Error Occurred"
@@ -178,23 +281,23 @@ main
           | Left err => do printLn err
                            exitFailure
 
-       putStrLn "Parsed"
+       putStrLn "-- LOG : Parsed"
 
-       printLn ast
+       -- printLn ast
 
        Right (R Nil type term) <- Closed.build ast
           | Left err => do printLn err
                            exitFailure
 
-       putStrLn "Checked"
+       putStrLn "-- LOG : Checked"
 
-       putStrLn "Running"
+       putStrLn "-- LOG : Running"
        case run term of
          Nothing => do printLn "Ran out of fuel"
                        exitFailure
-         Just (R t v steps)
-           => do putStrLn (showTerm t v)
-                 putStrLn "\n"
+         Just res --(R t v steps)
+           => do putStrLn (showEvalRes res)
+                 putStrLn "-- LOG : Finished"
                  exitSuccess
 
 

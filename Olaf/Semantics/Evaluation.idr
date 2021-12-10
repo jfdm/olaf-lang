@@ -20,8 +20,8 @@ import Olaf.Types
 
 import Olaf.Terms
 
-import Olaf.Terms.Renaming
-import Olaf.Terms.Substitution
+import public Olaf.Terms.Renaming
+import public Olaf.Terms.Substitution
 
 import Olaf.Values
 
