@@ -43,7 +43,7 @@ Show Ty where
   show (TyList x) = "(List " <+> show x <+> ")"
   show (TyProduct x y) = "(Pair " <+> show x <+> " "<+> show y <+> ")"
   show (TySum x y) = "(Sum " <+> show x <+> " "<+> show y <+> ")"
-  show (TyFunc x y) = "(" <+> show x <+> "->"<+> show y <+> ")"
+  show (TyFunc x y) = "(" <+> show x <+> " -> "<+> show y <+> ")"
   show TyUnit = "Unit"
 
 sexpr : String -> String -> String
@@ -53,12 +53,12 @@ namespace Expr
   namespace BOp
     export
     showKind : BinOp tyA tyR -> String
-    showKind (NOp PLUS) = "add"
-    showKind (NOp SUB) = "sub"
-    showKind (BOp AND) = "and"
-    showKind (BOp OR) = "or"
-    showKind (BOp XOR) = "xor"
-    showKind NCmp = "lt"
+    showKind (NOp PLUS) = "+"
+    showKind (NOp SUB) = "-"
+    showKind (BOp AND) = "&&"
+    showKind (BOp OR) = "||"
+    showKind (BOp XOR) = "^"
+    showKind NCmp = "<"
 
   namespace UOp
     export
@@ -155,15 +155,15 @@ namespace Term
   showTerm' (B {b = Chr} x)  = show x
 
   showTerm' (BOp kind l r)
-    = unwords ["(" <+> showKind kind, showTerm' l, showTerm' r <+> ")"]
+    = unwords ["(" <+> showTerm' l, showKind kind, showTerm' r <+> ")"]
 
   showTerm' (UOp kind e)
     = unwords ["(" <+> showKind kind, showTerm' e <+> ")"]
 
   showTerm' Empty
-    = "empty"
+    = "[]"
   showTerm' (Extend head tail)
-    = unwords ["(extend", showTerm' head, showTerm' tail <+>")"]
+    = unwords ["(" <+> showTerm' head, "::", showTerm' tail <+>")"]
   showTerm' (MatchList what empty extend)
     = unwords ["(match", showTerm' what, "{", showTerm' empty, "|", showTerm' extend <+> "})"]
 
@@ -184,7 +184,7 @@ namespace Term
     = unwords ["(f", showTerm' test, "{", showTerm' tt, "} else {", showTerm' tt <+> "})"]
 
   showTerm' (Rec this)
-    = unwords ["(rec" <+> showTerm' this <+> ")"]
+    = unwords ["(rec", showTerm' this <+> ")"]
 
   showTerm' (Let this body)
     = unwords ["(let", showTerm' this, "in {", showTerm' body <+> "})"]
@@ -192,14 +192,17 @@ namespace Term
   showTerm' (Var x)
       = unwords ["(var", showElem x <+> ")"]
     where
+      toNat : Elem ty xs -> Nat
+      toNat Here = Z
+      toNat (There x) = S (toNat x)
+
       showElem : Elem ty xs -> String
-      showElem Here = "Here"
-      showElem (There x) = unwords ["(T", showElem x <+>")"]
+      showElem =  (show . toNat)
 
   showTerm' (Fun a body)
     = unwords ["(\\" <+> show a, "->", "{" <+> showTerm' body <+> "})"]
   showTerm' (App f a)
-    = unwords ["(apply", showTerm' f, showTerm' a, ")"]
+    = unwords ["(" <+> showTerm' f, "$", showTerm' a <+> ")"]
 
   showTerm' U
     = "unit"
@@ -210,40 +213,40 @@ namespace Term
 namespace Eval
 
   showRedux : Redux a b -> String
-  showRedux (SimplifyBOpLeft x) = "= Simplify Left Operand"
-  showRedux (SimplifyBOpRight x y) = "= Simplify Right Operand"
-  showRedux (ReduceBOp vl vr x) = "= Reduce Binary Operation"
-  showRedux (SimplifyUOp x) = "= Simplify Unary Operation"
-  showRedux (ReduceUOp val prf) = "= Reduce Unary Operand"
-  showRedux (ReduceListHead x) = "= Reduce List Head"
-  showRedux (ReduceListTail x) = "= Reduce List Tail"
-  showRedux (SimplifyMatchList x) = "= Simplify Match List"
-  showRedux ReduceMatchListNil = "= Reduce Match List Nil"
-  showRedux ReduceMatchListCons = "= Reduce Match List Cons"
-  showRedux (SimplifyPairLeft x)  = "= Simplify Left"
-  showRedux (SimplifyPairRight x) = "= Simplify Right"
-  showRedux (SimplifyMatchPair x) = "= Simplify Match Pair"
-  showRedux ReduceMatchPair = "= Reduce Match Pair"
-  showRedux (SimplifyThis x) = "= Simplify This"
-  showRedux (SimplifyThat x) = "= Simplify That"
-  showRedux (SimplifyMatchSum x) = "= Simplify Match Sum"
-  showRedux ReduceMatchSumThis = "= Reduce Match Sum This"
-  showRedux ReduceMatchSumThat = "= Reduce Match Sum That"
-  showRedux (SimplifyCond x) = "= Simplify Conditional"
-  showRedux ReduceCondTrue  = "= Reduce Conditional True"
-  showRedux ReduceCondFalse = "= Reduce Conditional False"
-  showRedux ReduceRec = "= Reduce Recursion"
-  showRedux ReduceLet = "= Reduce Let Binding"
-  showRedux (SimplifyFuncAppFunc func) = "= Simplify Application Function"
-  showRedux (SimplifyFuncAppVar value var) = "= Simplify Application Variable"
-  showRedux (ReduceFuncApp x) = "= Reduce Application"
-  showRedux ReduceThe = "= Reduce The"
+  showRedux (SimplifyBOpLeft x) = "Simplify Left Operand by " ++ showRedux x
+  showRedux (SimplifyBOpRight x y) = "Simplify Right Operand by " ++ showRedux y
+  showRedux (ReduceBOp vl vr x) = "Reduce Binary Operation"
+  showRedux (SimplifyUOp x) = "Simplify Unary Operation by " ++ showRedux x
+  showRedux (ReduceUOp val prf) = "Reduce Unary Operand"
+  showRedux (ReduceListHead x) = "Reduce List Head by " ++ showRedux x
+  showRedux (ReduceListTail x) = "Reduce List Tail by " ++ showRedux x
+  showRedux (SimplifyMatchList x) = "Simplify Match List by " ++ showRedux x
+  showRedux ReduceMatchListNil = "Reduce Match List Nil"
+  showRedux ReduceMatchListCons = "Reduce Match List Cons"
+  showRedux (SimplifyPairLeft x)  = "Simplify Left by " ++ showRedux x
+  showRedux (SimplifyPairRight x) = "Simplify Right by " ++ showRedux x
+  showRedux (SimplifyMatchPair x) = "Simplify Match Pair by " ++ showRedux x
+  showRedux ReduceMatchPair = "Reduce Match Pair"
+  showRedux (SimplifyThis x) = "Simplify This by " ++ showRedux x
+  showRedux (SimplifyThat x) = "Simplify That by " ++ showRedux x
+  showRedux (SimplifyMatchSum x) = "Simplify Match Sum by" ++ showRedux x
+  showRedux ReduceMatchSumThis = "Reduce Match Sum This"
+  showRedux ReduceMatchSumThat = "Reduce Match Sum That"
+  showRedux (SimplifyCond x) = "Simplify Conditional by " ++ showRedux x
+  showRedux ReduceCondTrue  = "Reduce Conditional True"
+  showRedux ReduceCondFalse = "Reduce Conditional False"
+  showRedux ReduceRec = "Reduce Recursion"
+  showRedux ReduceLet = "Reduce Let Binding"
+  showRedux (SimplifyFuncAppFunc func) = "Simplify Application Function"
+  showRedux (SimplifyFuncAppVar value var) = "Simplify Application Variable by " ++ showRedux var
+  showRedux (ReduceFuncApp x) = "Reduce Application"
+  showRedux ReduceThe = "Reduce Ascription"
 
   showReduces : {a,b : Term Nil ty} -> Reduces a b -> List String
   showReduces {a = a} {b = a} Refl
     = [showTerm' a]
   showReduces {a = a} {b = b} (Trans x y)
-    = showTerm' a :: showRedux x :: showReduces y
+    = showTerm' a :: ("= " <+> showRedux x) :: showReduces y
 
 
   export
