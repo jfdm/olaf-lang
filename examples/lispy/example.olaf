@@ -1,0 +1,20 @@
+(def [xs : (List Nat)]
+     (extend 1
+     (extend 2 empty[Nat])))
+
+(def [temp : (List Nat)]
+     (let [ys : (List Nat) xs]
+          ys))
+
+(def [double : (Nat -> Nat)]
+     (fun ([x : Nat]) (add x x)))
+
+(def rec [map : ((Nat -> Nat) -> ((List Nat) -> (List Nat)))]
+     (fun ([f  : (Nat -> Nat)]
+           [xs : (List Nat)])
+          (match xs
+                 [empty empty[Nat]]
+                 [(extend y ys) (let [zs : (List Nat) ((map f) ys)]
+                                     (extend (f y) zs))])))
+
+(main ((map double) xs))

@@ -1,0 +1,5 @@
+-- Example
+(main
+  (let [x : Nat 2]
+  (let [y : Nat 3]
+       (add x y))))

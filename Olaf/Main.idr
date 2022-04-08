@@ -19,6 +19,7 @@ import Olaf.Values
 import Olaf.Semantics.Evaluation
 
 import Olaf.Syntax.PythonEsque
+import Olaf.Syntax.Lispy
 
 Show a => Show (ParseFailure a) where
   show err
@@ -276,15 +277,40 @@ Show Error where
                      , "\t" <+> show y
                      ]
 
+data Syntax = LISPY | PYTHONESQUE
+
+parseArgs : List String -> IO (Pair String Syntax)
+parseArgs (exe::"lispy"::y::Nil)
+  = pure (y, LISPY)
+
+parseArgs (exe::"pythonesque"::y::Nil)
+  = pure (y, PYTHONESQUE)
+
+parseArgs _
+  = do putStrLn "<lispy/pythonesque> <filename>"
+       exitSuccess
+
+
+parseFileRaw : (String -> IO (Either (ParseError Token) Expr)) -> String -> IO Expr
+parseFileRaw f fname
+  = do case !(f fname) of
+         Right ast => pure ast
+         Left  err => do printLn err
+                         exitFailure
+
+parseFile : Syntax -> String -> IO Expr
+parseFile PYTHONESQUE
+  = parseFileRaw Olaf.PythonEsque.Programme.fromFile
+parseFile LISPY
+  = parseFileRaw Olaf.Lispy.Programme.fromFile
+
+
 main : IO ()
 main
-  = do (x::y::Nil) <- getArgs
-          | _ => do putStrLn "Just one file please"
-                    exitSuccess
+  = do args <- getArgs
+       (fname,syn) <- parseArgs args
 
-       Right ast <- Olaf.PythonEsque.Programme.fromFile y
-          | Left err => do printLn err
-                           exitFailure
+       ast <- parseFile syn fname
 
        putStrLn "-- LOG : Parsed"
 

@@ -30,4 +30,6 @@ modules = Olaf.Types
         , Olaf.Syntax.PythonEsque.Parser
         , Olaf.Syntax.PythonEsque
 
+        , Olaf.Syntax.Lispy
+
         , Olaf.Main
