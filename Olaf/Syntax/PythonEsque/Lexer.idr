@@ -1,4 +1,4 @@
-module Olaf.Syntax.Lexer
+module Olaf.Syntax.PythonEsque.Lexer
 
 import Text.Lexer
 

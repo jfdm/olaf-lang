@@ -1,4 +1,4 @@
-module Olaf.Syntax.AST
+module Olaf.AST
 
 import Data.String
 

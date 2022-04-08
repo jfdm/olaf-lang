@@ -10,13 +10,15 @@ import Data.Either
 import Toolkit.Data.Location
 
 import Olaf
-import Olaf.Syntax
+import Olaf.AST
+import Olaf.TypeCheck
 import Olaf.Types
 import Olaf.Terms
 import Olaf.Values
 
 import Olaf.Semantics.Evaluation
 
+import Olaf.Syntax.PythonEsque
 
 Show a => Show (ParseFailure a) where
   show err
@@ -280,7 +282,7 @@ main
           | _ => do putStrLn "Just one file please"
                     exitSuccess
 
-       Right ast <- Olaf.Programme.fromFile y
+       Right ast <- Olaf.PythonEsque.Programme.fromFile y
           | Left err => do printLn err
                            exitFailure
 

@@ -23,10 +23,11 @@ modules = Olaf.Types
 
         , Olaf.Interpreter
 
-        , Olaf.Syntax.AST
-        , Olaf.Syntax.Lexer
-        , Olaf.Syntax.Parser
-        , Olaf.Syntax.Build
-        , Olaf.Syntax
+        , Olaf.AST
+        , Olaf.TypeCheck
+
+        , Olaf.Syntax.PythonEsque.Lexer
+        , Olaf.Syntax.PythonEsque.Parser
+        , Olaf.Syntax.PythonEsque
 
         , Olaf.Main

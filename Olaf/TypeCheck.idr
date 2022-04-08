@@ -1,4 +1,4 @@
-module Olaf.Syntax.Build
+module Olaf.TypeCheck
 
 import Decidable.Equality
 
@@ -21,7 +21,7 @@ import Toolkit.Data.DList.Elem
 
 import Olaf
 
-import Olaf.Syntax.AST
+import Olaf.AST
 
 %default total
 
