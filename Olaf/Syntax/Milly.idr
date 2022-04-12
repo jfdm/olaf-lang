@@ -1,4 +1,4 @@
-module Olaf.Syntax.PythonEsque
+module Olaf.Syntax.Milly
 
 import Data.Vect
 import Data.Nat
@@ -22,8 +22,8 @@ import Olaf
 
 import Olaf.AST
 
-import public Olaf.Syntax.PythonEsque.Lexer
-import        Olaf.Syntax.PythonEsque.Parser
+import public Olaf.Syntax.Common.Lexer
+import        Olaf.Syntax.Common.Parser
 
 %default total
 
@@ -264,8 +264,8 @@ mutual
     = do s <- Toolkit.location
          keyword "match"
          c <- expr
-         keyword "as"
-         symbol "{"
+         keyword "with"
+         symbol "|"
          symbol "("
          a <- name
          symbol ","
@@ -273,7 +273,6 @@ mutual
          symbol ")"
          suchThat
          r <- expr
-         symbol "}"
          e <- Toolkit.location
          pure (MatchPair (newFC s e) c a b r)
 
@@ -282,8 +281,8 @@ mutual
     = do s <- Toolkit.location
          keyword "match"
          c <- expr
-         keyword "as"
-         symbol "{"
+         keyword "with"
+         symbol "|"
          keyword "empty"
          suchThat
          emp <- expr
@@ -293,7 +292,6 @@ mutual
          t <- name
          suchThat
          rest <- expr
-         symbol "}"
          e <- Toolkit.location
          pure (MatchList (newFC s e) c emp h t rest)
 
@@ -302,8 +300,8 @@ mutual
     = do s <- Toolkit.location
          keyword "match"
          c <- expr
-         keyword "as"
-         symbol "{"
+         keyword "with"
+         symbol "|"
          keyword "this"
          l <- name
          suchThat
@@ -313,7 +311,6 @@ mutual
          r <- name
          suchThat
          br <- expr
-         symbol "}"
          e <- Toolkit.location
          pure (MatchSum (newFC s e) c l bl r br)
 
@@ -349,7 +346,7 @@ main_ =
 decl : Rule (FileContext, String, Ty, Bool, Expr)
 decl =
   do s <- Toolkit.location
-     keyword "def"
+     keyword "let"
      rec <- optional (keyword "rec")
      n <- name
      symbol ":"
@@ -369,7 +366,7 @@ olaf =
                  m ds)
 
 namespace Olaf
-  namespace PythonEsque
+  namespace Milly
 
     namespace Expression
       export

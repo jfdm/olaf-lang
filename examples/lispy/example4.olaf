@@ -1,0 +1,11 @@
+(def [a : Bool]
+     (if true
+         true
+         false))
+
+(def [b : Bool]
+     (match (this true as (Sum Bool Nat))
+            [(this x) x]
+            [(that x) false]))
+
+(main true)

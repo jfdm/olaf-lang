@@ -1,9 +1,0 @@
-def xs : (List Char) :=
-  (extend 'a'
-          (extend 'b'
-                  empty[Char]))
-
-def myAdd : (Nat -> (Nat -> Nat))
-  := (fun x : Nat, y : Nat => (add x y))
-
-main := (unpack "abcde")

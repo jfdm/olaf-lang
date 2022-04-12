@@ -22,8 +22,8 @@ import Olaf
 
 import Olaf.AST
 
-import public Olaf.Syntax.PythonEsque.Lexer
-import        Olaf.Syntax.PythonEsque.Parser
+import public Olaf.Syntax.Common.Lexer
+import        Olaf.Syntax.Common.Parser
 
 %default total
 

@@ -1,0 +1,20 @@
+let xs : (List Nat) =
+  (extend 1
+          (extend 2
+                  empty[Nat]))
+
+let temp : (List Nat) = let ys : (List Nat) = xs in ys
+
+let double : (Nat -> Nat) = (fun x : Nat => (add x x))
+
+
+let rec map : ((Nat -> Nat) -> ((List Nat) -> (List Nat))) =
+  (fun f : (Nat -> Nat), xs : (List Nat)
+     => match xs with
+         | empty       => empty[Nat]
+         | extend y ys => let zs : (List Nat) = (apply (apply map f) ys)
+                          in (extend (apply f y) zs)
+
+  )
+
+main = (apply (apply map double) xs)

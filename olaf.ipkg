@@ -26,10 +26,13 @@ modules = Olaf.Types
         , Olaf.AST
         , Olaf.TypeCheck
 
-        , Olaf.Syntax.PythonEsque.Lexer
-        , Olaf.Syntax.PythonEsque.Parser
-        , Olaf.Syntax.PythonEsque
+        , Olaf.Syntax.Common.Lexer
+        , Olaf.Syntax.Common.Parser
+
+        , Olaf.Syntax.Milly
+        , Olaf.Syntax.Lispy.Pretty
 
         , Olaf.Syntax.Lispy
+        , Olaf.Syntax.Lispy.Pretty
 
         , Olaf.Main

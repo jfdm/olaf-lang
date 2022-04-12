@@ -18,8 +18,17 @@ import Olaf.Values
 
 import Olaf.Semantics.Evaluation
 
-import Olaf.Syntax.PythonEsque
+import Olaf.Syntax.Milly
+import Olaf.Syntax.Milly.Pretty
+
 import Olaf.Syntax.Lispy
+import Olaf.Syntax.Lispy.Pretty
+
+record Syntax where
+  constructor S
+  parseFile : String -> IO (Either (ParseError Token) Expr)
+  prettify  : {type : Ty} -> Term Nil type -> Doc ()
+  prettyTypes : Ty -> Doc ()
 
 Show a => Show (ParseFailure a) where
   show err
@@ -35,186 +44,36 @@ Show a => Show (Run.ParseError a) where
   show (LError (MkLexFail l i))
     = trim $ unlines [show l, show i]
 
-Show Builtin where
-  show Nat = "Nat"
-  show Bool = "Bool"
-  show Str = "String"
-  show Chr = "Char"
+showErr : Syntax -> Error -> String
+showErr s (Err x y)
+  = trim $ unlines ["Error Occurred"
+                   , show x
+                   , (showErr s y)]
+showErr _ ExpSum = "Sum Expected"
+showErr _ ExpFunc = "Function Expected"
+showErr _ ExpProduct = "Pair Expected"
+showErr _ ExpList = "List Expected"
+showErr _ (NotName x) = "Not a name: " <+> show x
 
-Show Ty where
-  show (TyBuiltin x) = show x
-  show (TyList x) = "(List " <+> show x <+> ")"
-  show (TyProduct x y) = "(Pair " <+> show x <+> " "<+> show y <+> ")"
-  show (TySum x y) = "(Sum " <+> show x <+> " "<+> show y <+> ")"
-  show (TyFunc x y) = "(" <+> show x <+> " -> "<+> show y <+> ")"
-  show TyUnit = "Unit"
+showErr s (MMatch x y)
+  = trim $ unlines [ "Type Mismatch"
+                   , "Expected:"
+                   , "\t" <+> show ((prettyTypes s) x)
+                   , "Given:"
+                   , "\t" <+> show ((prettyTypes s) y)
+                   ]
 
-sexpr : String -> String -> String
-sexpr t e = unwords ["(" <+> t, e <+> ")"]
+Milly : Syntax
+Milly = S Olaf.Milly.Programme.fromFile
+          Olaf.Milly.pretty
+          Olaf.Milly.prettyTypes
 
-namespace Expr
-  namespace BOp
-    export
-    showKind : BinOp tyA tyR -> String
-    showKind (NOp PLUS) = "+"
-    showKind (NOp SUB) = "-"
-    showKind (BOp AND) = "&&"
-    showKind (BOp OR) = "||"
-    showKind (BOp XOR) = "^"
-    showKind NCmp = "<"
+Lispy : Syntax
+Lispy = S Olaf.Lispy.Programme.fromFile
+          Olaf.Lispy.pretty
+          Olaf.Lispy.prettyTypes
 
-  namespace UOp
-    export
-    showKind : UnOp tyA tyR -> String
-    showKind BNot = "not"
-    showKind (SOp SIZE) = "size"
-    showKind (SOp PACK) = "pack"
-    showKind (SOp UNPACK) = "unpack"
-    showKind (COp TOSTR) = "toString"
-    showKind (COp ORD) = "toNat"
-    showKind (COp CHAR) = "toChar"
-
-  show : AST a -> String
-  show (Ref x y) = show y
-
-  show (S x y) = show y
-  show (B x y) = show y
-  show (C x y) = show y
-  show (N x k) = show k
-
-  show (UOp fc k expr) = sexpr (showKind k) (show expr)
-
-  show (BOp fc k l r) = sexpr (showKind k) (unwords [show l, show r])
-
-  show (MatchPair fc c l r body)
-    = sexpr "match" (unwords [ show c, "as"
-                             , "{ (", show l, ",", show r, ") =>"
-                             , show body, "}"])
-
-  show (MatchList fc c emp h t rest)
-    = sexpr "match" (unwords [ show c, "as"
-                             , "{ empty =>", show emp
-                             , "| extend", show h, show t, "=>", show rest
-                             , "}"])
-
-
-  show (MatchSum fc c l lb r rb)
-    = sexpr "match" (unwords [ show c, "as"
-                             , "{ this", show l, "=>", show lb
-                             , "| that", show r, "=>", show rb
-                             , "}"])
-
-
-  show (Empty fc ty) = "empty" <+> "[" <+> show ty <+> "]"
-  show (Extend fc h t) = sexpr "extend" (unwords [show h, show t])
-  show (Pair fc a b) = sexpr "tuple" (unwords [show a, show b])
-  show (This fc t ty) = sexpr "this" (unwords [show t, "as", show ty])
-  show (That fc t ty) = sexpr "that" (unwords [show t, "as", show ty])
-  show (Cond fc c t f) = sexpr "cond" (unwords [show c, show t, show f])
-  show (Let fc n ty rec value body)
-    = sexpr ("let" <+> if rec then "rec" else "")
-            (unwords [n, ":", show ty, ":=", show value, "in", show body])
-  show (Fun fc n ty body)
-    = sexpr "fun" (unwords [n, ":", show ty, "=>", show body])
-  show (App fc f a) = sexpr "app" (unwords [show f, show a])
-  show (TheUnit fc) = "unit"
-  show (The x y z) = unwords ["(the", show y, show z <+>")"]
-
-  export
-  Show (AST a) where
-    show = Expr.show
-
-namespace Term
-  export
-  showTerm : (term : Term Nil ty) -> Value term -> String
-  showTerm (B {b = Nat} v) B  = show v
-  showTerm (B {b = Bool} v) B = show v
-  showTerm (B {b = Str} v) B  = show v
-  showTerm (B {b = Chr} v) B  = show v
-
-  showTerm Empty Empty = "[]"
-  showTerm (Extend h t) (Extend x y)
-    = concat [showTerm h x, "::", showTerm t y]
-
-  showTerm (Pair f s) (Pair x y)
-    = concat ["(", showTerm f x, ",", showTerm s y, ")"]
-
-  showTerm (This t) (This x)
-    = concat ["(This ", showTerm t x,")"]
-
-  showTerm (That t) (That x)
-    = concat ["(That ", showTerm t x,")"]
-
-  showTerm U U = "U"
-
-  showTerm (Fun type body) Fun
-    = concat ["(fun...",")"]
-
-  export
-  showTerm' : (term : Term ctxt ty) -> String
-  showTerm' (B {b = Nat} x)  = show x
-  showTerm' (B {b = Bool} x) = show x
-  showTerm' (B {b = Str} x)  = show x
-  showTerm' (B {b = Chr} x)  = show x
-
-  showTerm' (BOp kind l r)
-    = unwords ["(" <+> showTerm' l, showKind kind, showTerm' r <+> ")"]
-
-  showTerm' (UOp kind e)
-    = unwords ["(" <+> showKind kind, showTerm' e <+> ")"]
-
-  showTerm' Empty
-    = "[]"
-  showTerm' (Extend head tail)
-    = unwords ["(" <+> showTerm' head, "::", showTerm' tail <+>")"]
-  showTerm' (MatchList what empty extend)
-    = unwords ["(match", showTerm' what, "{", showTerm' empty, "|", showTerm' extend <+> "})"]
-
-
-  showTerm' (Pair l r)
-    = unwords ["(" <+> showTerm' l <+> ",", showTerm' r <+> ")"]
-  showTerm' (MatchPair pair cases)
-    = unwords ["(match", showTerm' pair, "{", showTerm' cases <+> "})"]
-
-  showTerm' (This e)
-    = unwords ["(this" <+> showTerm' e <+> ")"]
-  showTerm' (That e)
-    = unwords ["(that" <+> showTerm' e <+> ")"]
-  showTerm' (MatchSum what this that)
-    = unwords ["(match", showTerm' what, "{", showTerm' this, "|", showTerm' that <+> "})"]
-
-  showTerm' (Cond test tt ff)
-    = unwords ["(f", showTerm' test, "{", showTerm' tt, "} else {", showTerm' tt <+> "})"]
-
-  showTerm' (Rec this)
-    = unwords ["(rec", showTerm' this <+> ")"]
-
-  showTerm' (Let this body)
-    = unwords ["(let", showTerm' this, "in {", showTerm' body <+> "})"]
-
-  showTerm' (Var x)
-      = unwords ["(var", showElem x <+> ")"]
-    where
-      toNat : Elem ty xs -> Nat
-      toNat Here = Z
-      toNat (There x) = S (toNat x)
-
-      showElem : Elem ty xs -> String
-      showElem =  (show . toNat)
-
-  showTerm' (Fun a body)
-    = unwords ["(\\" <+> show a, "->", "{" <+> showTerm' body <+> "})"]
-  showTerm' (App f a)
-    = unwords ["(" <+> showTerm' f, "$", showTerm' a <+> ")"]
-
-  showTerm' U
-    = "unit"
-
-  showTerm' (The ty term)
-    = unwords ["the", show ty, showTerm' term]
-
-namespace Eval
-
+namespace PrettyComps
   showRedux : Redux a b -> String
   showRedux (SimplifyBOpLeft x) = "Simplify Left Operand by " ++ showRedux x
   showRedux (SimplifyBOpRight x y) = "Simplify Right Operand by " ++ showRedux y
@@ -245,65 +104,47 @@ namespace Eval
   showRedux (ReduceFuncApp x) = "Reduce Application"
   showRedux ReduceThe = "Reduce Ascription"
 
-  showReduces : {a,b : Term Nil ty} -> Reduces a b -> List String
-  showReduces {a = a} {b = a} Refl
-    = [showTerm' a]
-  showReduces {a = a} {b = b} (Trans x y)
-    = showTerm' a :: ("= " <+> showRedux x) :: showReduces y
+  wrap : {type : Ty} -> Syntax -> Term Nil type -> Doc ()
+  wrap {type} s tm
+    = vcat [ Doc.pretty "```"
+           , (prettify s) tm
+           , Doc.pretty "```"
+           ]
 
+
+  showSteps : {ty : Ty} -> {a,b : Term Nil ty} -> Syntax -> Reduces a b -> List (Doc ())
+  showSteps {a = a} {b = a} s Refl
+    = [wrap s a]
+
+  showSteps {a = a} {b = b} s (Trans x y)
+    = wrap s a :: (pretty $ "### " <+> showRedux x) :: showSteps s y
 
   export
-  showEvalRes : {term : Term Nil ty} -> (res : EvalResult term) -> String
-  showEvalRes {term = term} (R that val steps)
-    = trim $ unlines (showReduces steps)
-
-
-Show Error where
-  show (Err x y)
-    = trim $ unlines ["Error Occurred"
-                     , show x
-                     , show y]
-  show ExpSum = "Sum Expected"
-  show ExpFunc = "Function Expected"
-  show ExpProduct = "Pair Expected"
-  show ExpList = "List Expected"
-  show (NotName x) = "Not a name: " <+> show x
-
-  show (MMatch x y)
-    = trim $ unlines [ "Type Mismatch"
-                     , "Expected:"
-                     , "\t" <+> show x
-                     , "Given:"
-                     , "\t" <+> show y
-                     ]
-
-data Syntax = LISPY | PYTHONESQUE
+  prettyComputation : Syntax
+                   -> {ty : Ty}
+                   -> {term : Term Nil ty}
+                   -> (res  : EvalResult term) -> IO ()
+  prettyComputation s {term = term} (R that val steps)
+    = printLn $ vcat (showSteps s steps)
 
 parseArgs : List String -> IO (Pair String Syntax)
 parseArgs (exe::"lispy"::y::Nil)
-  = pure (y, LISPY)
+  = pure (y, Lispy)
 
-parseArgs (exe::"pythonesque"::y::Nil)
-  = pure (y, PYTHONESQUE)
+parseArgs (exe::"milly"::y::Nil)
+  = pure (y, Milly)
 
 parseArgs _
-  = do putStrLn "<lispy/pythonesque> <filename>"
+  = do putStrLn "<lispy/milly> <filename>"
        exitSuccess
 
 
-parseFileRaw : (String -> IO (Either (ParseError Token) Expr)) -> String -> IO Expr
-parseFileRaw f fname
-  = do case !(f fname) of
+parseFile : Syntax -> String -> IO Expr
+parseFile s fname
+  = do case !((Syntax.parseFile s) fname) of
          Right ast => pure ast
          Left  err => do printLn err
                          exitFailure
-
-parseFile : Syntax -> String -> IO Expr
-parseFile PYTHONESQUE
-  = parseFileRaw Olaf.PythonEsque.Programme.fromFile
-parseFile LISPY
-  = parseFileRaw Olaf.Lispy.Programme.fromFile
-
 
 main : IO ()
 main
@@ -312,22 +153,22 @@ main
 
        ast <- parseFile syn fname
 
-       putStrLn "-- LOG : Parsed"
+       putStrLn "## LOG : Parsed"
 
        -- printLn ast
 
        Right (R Nil type term) <- Closed.build ast
-          | Left err => do printLn err
+          | Left err => do putStrLn $ showErr syn err
                            exitFailure
 
-       putStrLn "-- LOG : Checked"
+       putStrLn "## LOG : Checked"
 
-       putStrLn "-- LOG : Running"
+       putStrLn "## LOG : Running"
        case run term of
          Nothing => do printLn "Ran out of fuel"
                        exitFailure
-         Just res --(R t v steps)
-           => do putStrLn (showEvalRes res)
+         Just res
+           => do prettyComputation syn res
                  putStrLn "-- LOG : Finished"
                  exitSuccess
 

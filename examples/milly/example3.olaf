@@ -1,0 +1,17 @@
+let xs : (List Nat) =
+  (extend 1
+          (extend 2
+                  empty[Nat]))
+
+let myAdd : (Nat -> (Nat -> Nat))
+  = (fun x : Nat, y : Nat => (add x y))
+
+
+let rec foldr : ((Nat -> (Nat -> Nat)) -> (Nat -> ((List Nat) -> Nat)))
+  = (fun f : (Nat -> (Nat -> Nat)), acc : Nat, xs : (List Nat)
+     => match xs with
+         | empty       => acc
+         | extend y ys => (apply (apply f y) (apply (apply (apply foldr f) acc) ys))
+         )
+
+main = (apply (apply (apply foldr myAdd) 0) xs)

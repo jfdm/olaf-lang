@@ -292,7 +292,7 @@ namespace Expr
          V a b v <- isSum fc cres
 
          R _ tyL this <- build (MkName l a :: ctxt) bl
-         R _ tyR that <- build (MkName r b :: ctxt) bl
+         R _ tyR that <- build (MkName r b :: ctxt) br
 
          case decEq tyL tyR of
            No contra => Left (Err fc (MMatch tyL tyR))

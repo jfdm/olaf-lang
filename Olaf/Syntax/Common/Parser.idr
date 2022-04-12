@@ -1,4 +1,4 @@
-module Olaf.Syntax.PythonEsque.Parser
+module Olaf.Syntax.Common.Parser
 
 import Data.Vect
 import Data.Nat
@@ -20,7 +20,7 @@ import public Toolkit.Text.Parser.Run
 
 import Olaf
 
-import Olaf.Syntax.PythonEsque.Lexer
+import Olaf.Syntax.Common.Lexer
 
 %default total
 
@@ -58,7 +58,7 @@ namespace API
 
   export
   assign : Rule ()
-  assign = symbol ":="
+  assign = symbol "="
 
   export
   suchThat : Rule ()

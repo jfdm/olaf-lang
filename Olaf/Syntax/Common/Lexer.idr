@@ -1,4 +1,4 @@
-module Olaf.Syntax.PythonEsque.Lexer
+module Olaf.Syntax.Common.Lexer
 
 import Text.Lexer
 
@@ -8,7 +8,7 @@ import Toolkit.Text.Lexer.Run
 
 
 symbols : List String
-symbols = ["->", "=>", ":=", "[", "]", ":", "{", "}", ",", "(", ")", "|"
+symbols = ["->", "=>", "=", ":=", "[", "]", ":", "{", "}", ",", "(", ")", "|"
           ]
 
 keywords : List String
@@ -16,7 +16,7 @@ keywords = [ "def", "fun", "let", "in", "rec", "main"
 
            , "this", "that"
 
-           , "match", "as"
+           , "match", "as", "with"
 
            , "if", "then", "else"
 

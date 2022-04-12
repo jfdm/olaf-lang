@@ -1,3 +1,0 @@
--- Example
-main := let x : Nat := 2 in
-        let y : Nat := 3 in (add x y)
