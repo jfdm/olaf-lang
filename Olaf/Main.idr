@@ -24,6 +24,9 @@ import Olaf.Syntax.Milly.Pretty
 import Olaf.Syntax.Lispy
 import Olaf.Syntax.Lispy.Pretty
 
+import Olaf.Syntax.STLC
+import Olaf.Syntax.STLC.Pretty
+
 record Syntax where
   constructor S
   parseFile : String -> IO (Either (ParseError Token) Expr)
@@ -62,6 +65,11 @@ showErr s (MMatch x y)
                    , "Given:"
                    , "\t" <+> show ((prettyTypes s) y)
                    ]
+
+STLC : Syntax
+STLC = S Olaf.STLC.Programme.fromFile
+         Olaf.STLC.pretty
+         Olaf.STLC.prettyTypes
 
 Milly : Syntax
 Milly = S Olaf.Milly.Programme.fromFile
@@ -134,8 +142,10 @@ parseArgs (exe::"lispy"::y::Nil)
 parseArgs (exe::"milly"::y::Nil)
   = pure (y, Milly)
 
+parseArgs (exe::"stlc"::y::Nil)
+  = pure (y, STLC)
 parseArgs _
-  = do putStrLn "<lispy/milly> <filename>"
+  = do putStrLn "<lispy/milly/stlc> <filename>"
        exitSuccess
 
 

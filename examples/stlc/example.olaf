@@ -1,0 +1,4 @@
+let p : (Nat -> (Nat -> Nat))
+  =
+    (fun x : Nat => (fun y : Nat => (add x y)))
+in (p 1)

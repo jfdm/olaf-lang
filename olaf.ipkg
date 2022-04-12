@@ -35,4 +35,7 @@ modules = Olaf.Types
         , Olaf.Syntax.Lispy
         , Olaf.Syntax.Lispy.Pretty
 
+        , Olaf.Syntax.STLC
+        , Olaf.Syntax.STLC.Pretty
+
         , Olaf.Main
