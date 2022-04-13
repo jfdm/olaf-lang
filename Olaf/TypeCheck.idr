@@ -28,64 +28,6 @@ import Olaf.AST
 
 %default total
 
-{-
-namespace Context
-  public export
-  data Name : Ty -> Type where
-    MkName : String -> (ty : Ty) -> Name ty
-
-  public export
-  Context : List Ty -> Type
-  Context = DList Ty Name
-
-  data HasName : (str : String) -> (name : Name type) -> Type where
-    Y : HasName str (MkName str type)
-
-  nameNotSame : (str = x -> Void) -> HasName str (MkName x type) -> Void
-  nameNotSame f Y = f Refl
-
-  hasName : (str : String)
-         -> (name : Name type)
-                 -> Dec (HasName str name)
-  hasName str (MkName x type) with (decEq str x)
-    hasName x (MkName x type) | (Yes Refl)
-      = Yes Y
-    hasName str (MkName x type) | (No contra)
-      = No (nameNotSame contra)
-
-  notInRest : (HasName str e -> Void) -> (DPair Ty (\t => Elem Ty Name (MkName str t) rest) -> Void) -> DPair Ty (\t => Elem Ty Name (MkName str t) (e :: rest)) -> Void
-  notInRest f g (MkDPair type (H (Same Refl Refl)))
-    = f (Y)
-  notInRest f g (MkDPair fst (T later))
-    = g (MkDPair fst later)
-
-  isEmpty : DPair Ty (\t => Elem Ty Name (MkName str t) []) -> Void
-  isEmpty (MkDPair _ (H x)) impossible
-
-  export
-  isName : (str  : String)
-        -> (ctxt : Context types)
-                -> Dec (t : Ty ** Elem Ty Name (MkName str t) ctxt)
-  isName str [] = No isEmpty
-  isName str (elem :: rest) with (hasName str elem)
-    isName str ((MkName str x) :: rest) | (Yes Y)
-      = Yes (MkDPair x (H (Same Refl Refl)))
-    isName str (elem :: rest) | (No contra) with (isName str rest)
-      isName str (elem :: rest) | (No contra) | (Yes (MkDPair x prf))
-        = Yes (MkDPair x (T prf))
-      isName str (elem :: rest) | (No contra) | (No f)
-        = No (notInRest contra f)
-
-
-  export
-  mkVar : {ctxt  : Context types}
-       -> (prf   : Elem Ty Name (MkName str t) ctxt)
-                -> Elem t types
-  mkVar (H (Same Refl Refl)) = Here
-  mkVar (T later) = There (mkVar later)
-
--}
-
 public export
 data Error : Type where
   Err : FileContext -> Error -> Error
