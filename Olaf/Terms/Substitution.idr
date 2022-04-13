@@ -1,6 +1,7 @@
 module Olaf.Terms.Substitution
 
-import Toolkit.Data.List.DeBruijn
+import public Toolkit.DeBruijn.Renaming
+import public Toolkit.DeBruijn.Substitution
 
 import Olaf.Types
 import Olaf.Terms

@@ -1,6 +1,6 @@
 module Olaf.Terms.Renaming
 
-import Toolkit.Data.List.DeBruijn
+import Toolkit.DeBruijn.Renaming
 
 import Olaf.Types
 import Olaf.Terms

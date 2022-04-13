@@ -33,20 +33,6 @@ record Syntax where
   prettify  : {type : Ty} -> Term Nil type -> Doc ()
   prettyTypes : Ty -> Doc ()
 
-Show a => Show (ParseFailure a) where
-  show err
-    = trim $ unlines [show (location err), (error err)]
-
-Show a => Show (Run.ParseError a) where
-  show (FError err)
-    = trim $ unlines ["File Error: "
-                     , show err]
-  show (PError err)
-    = trim $ unlines (forget (map show err))
-
-  show (LError (MkLexFail l i))
-    = trim $ unlines [show l, show i]
-
 showErr : Syntax -> Error -> String
 showErr s (Err x y)
   = trim $ unlines ["Error Occurred"
@@ -167,7 +153,7 @@ main
 
        -- printLn ast
 
-       Right (R Nil type term) <- Closed.build ast
+       Right (type ** term) <- Closed.build ast
           | Left err => do putStrLn $ showErr syn err
                            exitFailure
 

@@ -2,8 +2,6 @@ module Olaf.Semantics.Reductions
 
 import Decidable.Equality
 
-import public Toolkit.Data.List.DeBruijn
-
 import Data.Nat
 import Data.String
 import Data.List

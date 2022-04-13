@@ -2,14 +2,13 @@ module Olaf.Terms
 
 import Decidable.Equality
 
-import public Toolkit.Data.List.DeBruijn
-
 import Data.Nat
 import Data.String
 import Data.List
 import Data.List.Elem
 
-import Olaf.Types
+import public Toolkit.DeBruijn.Renaming
+import        Olaf.Types
 import public Olaf.Types.Operators
 
 %default total

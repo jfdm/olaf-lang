@@ -1,7 +1,6 @@
 module Olaf
 
 import public Data.List.Elem
-import public Toolkit.Data.List.DeBruijn
 
 import public Olaf.Types
 import public Olaf.Terms
